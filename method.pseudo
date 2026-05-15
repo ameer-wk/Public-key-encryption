@@ -1,0 +1,140 @@
+sequence_generater(n)
+    e = empty list, total = 0
+
+    FOR i from 0 to n-1:
+        r = random number 1–10
+        next_value = total + r
+        append next_value to e
+        total = total + next_value
+
+    RETURN e
+END
+
+prime(n)
+    IF n < 2 THEN RETURN false
+    i = 2
+    
+    WHILE i * i <= n:
+        IF n mod i = 0 THEN RETURN false
+        i = i + 1
+    RETURN true
+END
+
+key_generater(n)
+    e = sequence_generater(n)
+    REPEAT pick q > 2 * last(e) UNTIL prime(q)
+    REPEAT pick w between 2 and q-1 UNTIL gcd(w,q)=1
+
+    h = empty list
+    FOR each value in e:
+        append (w * value) mod q to h    
+    RETURN e, q, w, h
+END
+
+encrypt(bits, h, size)
+    original_size = length(bits)
+    IF original_size mod size ≠ 0 THEN pad bits with zeros
+    cipher_block = empty list
+
+    FOR each size-bit block:
+        c = sum of h[j] * bit[j]
+        append c to cipher_block
+
+    RETURN cipher_block, original_size
+END
+
+inverse(a, b)
+    TRY compute modular inverse of a mod b
+        RETURN result
+    ELSE RETURN None
+END
+
+decrypt(cipher_block, e, q, w, size, original_size)
+    inv_w = inverse(w, q)
+    IF inv_w is None THEN error
+    all_bits = empty list
+
+    FOR each c in cipher_block:
+        prime_c = (c * inv_w) mod q
+        bits = zeros list of length size
+        remaining = prime_c
+
+        FOR i from size-1 down to 0:
+            IF remaining >= e[i]:
+                bits[i] = 1
+                remaining = remaining - e[i]
+        append bits to all_bits
+
+    RETURN first original_size bits
+END
+
+convert_text(text)
+    bits = empty list
+    FOR each character:
+        convert to 8-bit binary and append bits
+    RETURN bits
+END
+
+convert_bit(bits)
+    td = empty list
+    FOR each 8-bit group:
+        pad if needed
+        convert to number and then character
+        append to td
+    RETURN joined characters
+END
+
+menu()
+    ask user for n until valid
+    keys_generated = false
+    last_cipher_block = None
+
+    LOOP:
+        print menu
+        read choice
+
+        IF choice = 1:
+            generate e,q,w,h
+            print keys
+            keys_generated = true
+
+        ELSE IF choice = 2:
+            IF not keys_generated THEN print error and continue
+            read plaintext, convert to bits
+            read h list until valid
+            cipher_block, original_size = encrypt(bits,h,size)
+            print ciphertext
+            store cipher_block and original_size
+
+        ELSE IF choice = 3:
+            IF not keys_generated OR no ciphertext THEN print error
+            read e, q, w
+            bits = decrypt(cipher_block,e,q,w,size,original_size)
+            print convert_bit(bits)
+
+        ELSE IF choice = 4:
+            call run_test()
+
+        ELSE IF choice = 5:
+            exit program
+
+        ELSE print "Not an option"
+END
+
+run_test()
+    size = 8
+    define long plaintext
+    bits = convert_text(plaintext)
+    original_size = length(bits)
+
+    FOR 2 times:
+        generate keys
+        encrypt and decrypt
+        print whether correct
+
+    print "Test finished"
+END
+
+MAIN
+    call menu()
+END
